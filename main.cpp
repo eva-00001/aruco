@@ -1,6 +1,4 @@
 //uploaded to github
-
-
 //this program is a broadcaster, tf_listener is the listener
 
 #include <ros/ros.h>   
@@ -55,8 +53,8 @@ struct Marker{
 
 struct Camera{
 
-	cv::Mat position;
-	cv::Mat rotation;
+  cv::Mat position;
+  cv::Mat rotation;
 };
 
 class ArucoMapping
@@ -202,23 +200,23 @@ public:
 
   cv::Mat mat_average(std::vector<cv::Mat> a){      //get average mat from a vector of mats
 
-  	if(a.size() == 0){
-  		double la[1][1] = {9999999.0};
+    if(a.size() == 0){
+      double la[1][1] = {9999999.0};
       cv::Mat ka = Mat(1,1,CV_64FC1,la);
       return ka;
-  	}
+    }
 
-  	cv::Mat all = a[0];
-  	for(int i=1;i<a.size();i++){
-  		all+=a[i];
-  	}
+    cv::Mat all = a[0];
+    for(int i=1;i<a.size();i++){
+      all+=a[i];
+    }
 
-  	all = all/(double)a.size();
-  	return all;
+    all = all/(double)a.size();
+    return all;
   }
   
 private:
-	
+  
   cv::Mat CameraCalibration(cv::Mat img){
 
     cv::Mat t;
@@ -244,7 +242,7 @@ private:
 
   void detectAruco(cv::Mat img){
 
-  	std::vector<cv::Vec3d> rvecs, tvecs; 
+    std::vector<cv::Vec3d> rvecs, tvecs; 
     std::vector<int> ids;
 
     std::vector<std::vector<cv::Point2f> > corners;
@@ -263,130 +261,114 @@ private:
     //rvecs and tvecs are double
     
     if (ids.size() > 0) {
-   	  cout<<endl<<endl<<endl<<"begin------------------------------------"<<endl;
+      cout<<endl<<endl<<endl<<"begin------------------------------------"<<endl;
     
       if(!begin){                     
 
-      	//the first time the camera detects arcode, initialize 
+        //the first time the camera detects arcode, initialize 
 
-    		double kakaka1[1][3] = {0,0,0};
-    		cv::Mat new_camera_position = Mat(1,3,CV_64FC1,kakaka1);
+        double kakaka1[1][3] = {0,0,0};
+        cv::Mat new_camera_position = Mat(1,3,CV_64FC1,kakaka1);
 
-    		double kakaka2[3][3] = {1,0,0,0,1,0,0,0,1};                //to be corrected
-    		cv::Mat new_camera_rotation = Mat(3,3,CV_64FC1,kakaka2);
+        double kakaka2[3][3] = {1,0,0,0,1,0,0,0,1};                //to be corrected
+        cv::Mat new_camera_rotation = Mat(3,3,CV_64FC1,kakaka2);
 
-    		Camera newcamera;
-    		newcamera.position = new_camera_position;
-    		newcamera.rotation = new_camera_rotation;
+        Camera newcamera;
+        newcamera.position = new_camera_position;
+        newcamera.rotation = new_camera_rotation;
 
-    		my_camera.push_back(newcamera);
+        my_camera.push_back(newcamera);
 
 
-    		for (int i=0;i<rvecs.size();i++){              //push all detected arcodes
+        for (int i=0;i<rvecs.size();i++){              //push all detected arcodes
 
-    			Marker new_marker;
-    			new_marker.marker_id = ids[i];
+          Marker new_marker;
+          new_marker.marker_id = ids[i];
 
-    			cv::Mat marker_rotation(3,3,CV_64FC1);
-    			cv::Rodrigues(rvecs[i], marker_rotation);
-    			new_marker.rotation_to_origin = marker_rotation;
+          cv::Mat marker_rotation(3,3,CV_64FC1);
+          cv::Rodrigues(rvecs[i], marker_rotation);
+          new_marker.rotation_to_origin = marker_rotation;
 
-    			double lalala[1][3] = {tvecs[i][0],tvecs[i][1],tvecs[i][2]};
+          double lalala[1][3] = {tvecs[i][0],tvecs[i][1],tvecs[i][2]};
 
-    			cv::Mat newmat = Mat(1,3,CV_64FC1,lalala);
-    			new_marker.translation_to_origin = newmat;
+          cv::Mat newmat = Mat(1,3,CV_64FC1,lalala);
+          new_marker.translation_to_origin = newmat;
 
           new_marker.locations.push_back(new_marker.translation_to_origin);
           new_marker.rotations.push_back(new_marker.rotation_to_origin);
 
+          all_markers.push_back(new_marker);
 
-  			  //see whether the camera is near the place below the arcode
-    			double x1 = tvecs[i][0];
-    			double y1 = tvecs[i][1];
-    			
-    		  
-  	  		
-  	  		//---------------------------------------------------------
-
-    			//cout<<ids[i]<<"'s position_to_camera: "<<tvecs[i]<<endl<<endl;
-
-    			all_markers.push_back(new_marker);
-
-    			begin = true;
-    		}
+          begin = true;
+        }
       }
 
       else{
 
-    		int visited[ids.size()];
-    		for(int i=0;i<ids.size();i++){
-    			visited[i] = 0;
-    		}
+        int visited[ids.size()];
+        for(int i=0;i<ids.size();i++){
+          visited[i] = 0;
+        }
 
-    		cv::Mat all_positions(3,3,CV_64FC1);
-    		cv::Mat all_rotations(3,3,CV_64FC1);
+        cv::Mat all_positions(3,3,CV_64FC1);
+        cv::Mat all_rotations(3,3,CV_64FC1);
 
-  	    double kakaka3[1][3] = {0,0,0};
-  	    all_positions = Mat(1,3,CV_64FC1,kakaka3);
+        double kakaka3[1][3] = {0,0,0};
+        all_positions = Mat(1,3,CV_64FC1,kakaka3);
 
-  	    double kakaka4[3][3] = {0,0,0,0,0,0,0,0,0};
-  	    all_rotations = Mat(3,3,CV_64FC1,kakaka4);
+        double kakaka4[3][3] = {0,0,0,0,0,0,0,0,0};
+        all_rotations = Mat(3,3,CV_64FC1,kakaka4);
 
-  	    int num = 0;
+        int num = 0;
+        bool exist = false;
 
-  	    bool exist = false;
-
-
-
-  	    //scan all detected, use them to determine the camera position
-      	for (int i=0;i<ids.size();i++){
-      		for(int j=0;j<all_markers.size();j++){
-      			if (ids[i] == all_markers[j].marker_id){
-      				exist = true;
-      				visited[i] = 1;
-      				num++;
-      				
-      				cv::Mat r0 = all_markers[j].rotation_to_origin;
-      				cv::Mat r1(3,3,CV_64FC1);
+        //scan all detected, use them to determine the camera position
+        for (int i=0;i<ids.size();i++){
+          for(int j=0;j<all_markers.size();j++){
+            if (ids[i] == all_markers[j].marker_id){
+              exist = true;
+              visited[i] = 1;
+              num++;
               
-      				cv::Rodrigues(rvecs[i], r1);
-      				cv::Mat t0 = all_markers[j].translation_to_origin;
+              cv::Mat r0 = all_markers[j].rotation_to_origin;
+              cv::Mat r1(3,3,CV_64FC1);
+              
+              cv::Rodrigues(rvecs[i], r1);
+              cv::Mat t0 = all_markers[j].translation_to_origin;
 
-  					  double lalala[1][3] = {tvecs[i][0],tvecs[i][1],tvecs[i][2]};
+              double lalala[1][3] = {tvecs[i][0],tvecs[i][1],tvecs[i][2]};
 
-  					  //cout<<ids[i]<<"'s position_to_camera: "<<tvecs[i]<<endl<<endl;
+              //cout<<ids[i]<<"'s position_to_camera: "<<tvecs[i]<<endl<<endl;
 
-    					cv::Mat t1 = Mat(1,3,CV_64FC1,lalala);
+              cv::Mat t1 = Mat(1,3,CV_64FC1,lalala);
 
-  		    		cv::Mat n_translation(3,3,CV_64FC1);
-  		    		n_translation = t0-t1*r1.inv()*r0; //maybe to be corrected
-  		            
-  		    		cv::Mat n_rotation(3,3,CV_64FC1);
-  		    		n_rotation = r1.inv()*r0;          //maybe to be corrected
-  		    		 
-  		    		all_rotations += n_rotation;
-  		        
-  		    		all_positions += n_translation;
-  		   
-  		    		break;
-      			}
-      	  }
+              cv::Mat n_translation(3,3,CV_64FC1);
+              n_translation = t0-t1*r1.inv()*r0; //maybe to be corrected
+                  
+              cv::Mat n_rotation(3,3,CV_64FC1);
+              n_rotation = r1.inv()*r0;          //maybe to be corrected
+               
+              all_rotations += n_rotation;
+              
+              all_positions += n_translation;
+         
+              break;
+            }
+          }
         }
 
         if(exist){
-        	cv::Mat new1_camera_position = all_positions/num;
-      		cv::Mat new1_camera_rotation = all_rotations/num;
+          cv::Mat new1_camera_position = all_positions/num;
+          cv::Mat new1_camera_rotation = all_rotations/num;
 
-      		Camera new1camera;
-      		new1camera.position = new1_camera_position;
-      		new1camera.rotation = new1_camera_rotation;
-      		my_camera.push_back(new1camera);
+          Camera new1camera;
+          new1camera.position = new1_camera_position;
+          new1camera.rotation = new1_camera_rotation;
+          my_camera.push_back(new1camera);
         }
 
         num = 0;
         exist = false;
-
-
 
         //push known markers' new estimated information
         for (int i=0;i<ids.size();i++){
@@ -402,7 +384,6 @@ private:
               double lalala[1][3] = {tvecs[i][0],tvecs[i][1],tvecs[i][2]};
               cv::Mat t1 = Mat(1,3,CV_64FC1,lalala);
 
-
               cv::Mat n_translation(3,3,CV_64FC1);
               cv::Mat n_rotation(3,3,CV_64FC1);
 
@@ -416,53 +397,46 @@ private:
             }
           }
         }
+        // using the estimated position of camera above
+        // to compute the new markers' rotation and translation to origin
+        // push all newcomers
+        for(int i=0;i<ids.size();i++){
 
+          if (!visited[i]){
 
-  	    // using the estimated position of camera above
-  	    // to compute the new markers' rotation and translation to origin
-  	    // push all newcomers
-      	for(int i=0;i<ids.size();i++){
+            cv::Mat r0 = my_camera.back().rotation;
+            cv::Mat t0 = my_camera.back().position;
 
-      		if (!visited[i]){
+            cv::Mat r1(3,3,CV_64FC1);
+            cv::Rodrigues(rvecs[i], r1);
 
-      			cv::Mat r0 = my_camera.back().rotation;
-      			cv::Mat t0 = my_camera.back().position;
+            double lalala[1][3] = {tvecs[i][0],tvecs[i][1],tvecs[i][2]};
 
-      			cv::Mat r1(3,3,CV_64FC1);
-      			cv::Rodrigues(rvecs[i], r1);
+            cv::Mat t1 = Mat(1,3,CV_64FC1,lalala);
 
-      			double lalala[1][3] = {tvecs[i][0],tvecs[i][1],tvecs[i][2]};
+            Marker new_marker;
 
-    				cv::Mat t1 = Mat(1,3,CV_64FC1,lalala);
+            new_marker.marker_id = ids[i];
 
-      			Marker new_marker;
-
-      			new_marker.marker_id = ids[i];
-
-      			new_marker.rotation_to_origin = r1*r0;
-      			new_marker.translation_to_origin = t1*r0+t0;
+            new_marker.rotation_to_origin = r1*r0;
+            new_marker.translation_to_origin = t1*r0+t0;
 
             new_marker.locations.push_back(new_marker.translation_to_origin);
             new_marker.rotations.push_back(new_marker.rotation_to_origin);
 
-      			//cout<<ids[i]<<"'s position_to_camera: "<<tvecs[i]<<endl;
-
-      			all_markers.push_back(new_marker);
-      		}
-      	}
+            all_markers.push_back(new_marker);
+          }
+        }
       }
-
       Camera omg = my_camera.back();
       cout<<"camera position:"<<omg.position<<endl<<endl;
       cout<<"number of arcodes captured:"<<all_markers.size()<<endl<<endl; 
       
     }
 
-
-
     //publish the location information to /tf
 
-    //camera tf to world
+    //camera's tf to world
     if(my_camera.size()!=0){
 
       double *b;
@@ -479,7 +453,7 @@ private:
             ros::Time::now(),"world", "camera"));
     }
 
-    //marker tf to world
+    //marker's tf to world
     for (int i=0;i<all_markers.size();i++){
 
       if(all_markers[i].locations.size()!=0){
@@ -506,9 +480,6 @@ private:
   }
 };
 
-
-
-
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "image_converter");
@@ -523,30 +494,30 @@ int main(int argc, char** argv)
   double max_y = MIN;
   for (int i=0;i<ic.all_markers.size();i++){
 
-  	if(ic.all_markers[i].locations.size()==0){
-  		//cout<<"num"<<all_markers[i].marker_id<<": nothing"<<endl;
-  	}
+    if(ic.all_markers[i].locations.size()==0){
+      //cout<<"num"<<all_markers[i].marker_id<<": nothing"<<endl;
+    }
 
-  	else{
-  		cout<<"id"<<ic.all_markers[i].marker_id<<": "<<ic.all_markers[i].locations.size()<<"datas"<<endl;    //the number of times each arcode was detected 
-  	    double x = ic.mat_average(ic.all_markers[i].locations).at<double>(0,0);
-  	    double y = ic.mat_average(ic.all_markers[i].locations).at<double>(0,1);
-  	    double z = ic.mat_average(ic.all_markers[i].locations).at<double>(0,2);
+    else{
+      cout<<"id"<<ic.all_markers[i].marker_id<<": "<<ic.all_markers[i].locations.size()<<"datas"<<endl;    //the number of times each arcode was detected 
+        double x = ic.mat_average(ic.all_markers[i].locations).at<double>(0,0);
+        double y = ic.mat_average(ic.all_markers[i].locations).at<double>(0,1);
+        double z = ic.mat_average(ic.all_markers[i].locations).at<double>(0,2);
 
-  	    //change unit to centimeter
-  	    x*=254;
-  	    y*=254;
-  	    z*=254;
+        //change unit to centimeter
+        x*=254;
+        y*=254;
+        z*=254;
 
-  	    //update min and max values
-  	    if (x<min_x) min_x = x;
-  	    if (x>max_x) max_x = x;
+        //update min and max values
+        if (x<min_x) min_x = x;
+        if (x>max_x) max_x = x;
 
-  	    if (y<min_y) min_y = y;
-  	    if (y>max_y) max_y = y;
+        if (y<min_y) min_y = y;
+        if (y>max_y) max_y = y;
 
-  		cout<<"location "<<ic.all_markers[i].marker_id<<": "<<x<<" "<<y<<" "<<z<<endl;
-  	}
+      cout<<"location "<<ic.all_markers[i].marker_id<<": "<<x<<" "<<y<<" "<<z<<endl;
+    }
   }
   
 
@@ -562,38 +533,38 @@ int main(int argc, char** argv)
 
   for (int i=0;i<ic.all_markers.size();i++){
 
-  	if(ic.all_markers[i].locations.size()==0){
-  		//cout<<"num"<<all_markers[i].marker_id<<": nothing"<<endl;
-  	}
-  	else{
-  		//draw each marker
+    if(ic.all_markers[i].locations.size()==0){
+      //cout<<"num"<<all_markers[i].marker_id<<": nothing"<<endl;
+    }
+    else{
+      //draw each marker
 
-  	    double x = ic.mat_average(ic.all_markers[i].locations).at<double>(0,0);
-  	    
-  	    double y = ic.mat_average(ic.all_markers[i].locations).at<double>(0,1);
+        double x = ic.mat_average(ic.all_markers[i].locations).at<double>(0,0);
+        
+        double y = ic.mat_average(ic.all_markers[i].locations).at<double>(0,1);
 
-  	    x*=254;
-  	    y*=254;
+        x*=254;
+        y*=254;
 
-  	    //fit x,y into the map
+        //fit x,y into the map
 
-  	    x = bla*(x - min_x) / (max_x - min_x) + 100.0;
-  	    y = (bla*(max_y-min_y)/(max_x-min_x))*(y - min_y) / (max_y - min_y) + 100.0;
+        x = bla*(x - min_x) / (max_x - min_x) + 100.0;
+        y = (bla*(max_y-min_y)/(max_x-min_x))*(y - min_y) / (max_y - min_y) + 100.0;
 
-  	    /// Creating circles
-  	    cout<<"id:"<<ic.all_markers[i].marker_id<<endl; 
-  	    cout<<"x "<<x<<endl;
-  	    cout<<"y "<<y<<endl<<endl;
+        /// Creating circles
+        cout<<"id:"<<ic.all_markers[i].marker_id<<endl; 
+        cout<<"x "<<x<<endl;
+        cout<<"y "<<y<<endl<<endl;
 
-  	    MyFilledCircle( markers_image, Point(x,y));
-  	    //插入文字   
-  	    //参数为：承载的图片，插入的文字，文字的位置（文本框左下角），字体，大小，颜色 
-  	    stringstream ss;
-      	string words;
-      	ss<<"id:"<<ic.all_markers[i].marker_id<<endl;
-      	ss>>words;
-  	    putText( markers_image, words, Point(x,y), CV_FONT_HERSHEY_COMPLEX, 0.5, Scalar(255, 0, 0) ); 
-  	}
+        MyFilledCircle( markers_image, Point(x,y));
+        //插入文字   
+        //参数为：承载的图片，插入的文字，文字的位置（文本框左下角），字体，大小，颜色 
+        stringstream ss;
+        string words;
+        ss<<"id:"<<ic.all_markers[i].marker_id<<endl;
+        ss>>words;
+        putText( markers_image, words, Point(x,y), CV_FONT_HERSHEY_COMPLEX, 0.5, Scalar(255, 0, 0) ); 
+    }
   }
   /// Display
   imshow( markers_window, markers_image );  
